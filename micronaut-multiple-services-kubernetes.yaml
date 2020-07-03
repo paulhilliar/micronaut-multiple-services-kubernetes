@@ -1,0 +1,50 @@
+# This demonstrates how to run the image in Kubernetes and expose it via a load balancer
+# Run by using:
+# kubectl apply -f micronaut-graalnative-docker.deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: micronaut-random-greetings
+spec:
+  selector:
+    matchLabels:
+      app: micronaut-greetings-app
+  replicas:
+  template:
+    metadata:
+      labels:
+        app: micronaut-greetings-app
+    spec:
+      containers:
+        - name: greetings-app
+          image: greeting-service:latest
+          imagePullPolicy: IfNotPresent               # important - otherwise Kubernetes will try to pull from DockerHub
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 5
+
+---
+# Create a load balancer for the app to expose it on localhost:8080
+# $ curl localhost:8080/owners
+apiVersion: v1
+kind: Service
+metadata:
+  name: greetings-service-loadbalancer
+spec:
+  selector:
+    app: micronaut-greetings-app
+  ports:
+    - port: 8080        # the localhost port that we will use to expose the service
+      targetPort: 8080  # the port on the container
+  type: LoadBalancer
+
