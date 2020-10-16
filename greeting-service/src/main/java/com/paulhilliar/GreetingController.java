@@ -4,11 +4,18 @@ import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
 
 @Controller("/greetings")
-class GreetingController {
+public class GreetingController {
+
+    private final NameServiceClient nameServiceClient;
+
+    public GreetingController(NameServiceClient nameServiceClient) {
+        this.nameServiceClient = nameServiceClient;
+    }
 
     @Get("/")
     Greeting generateGreeting() {
-        return new Greeting("Hi", "Bob Smith");
+        Name name = nameServiceClient.getName();
+        return new Greeting("Hi", String.format("%s %s", name.getFirstName(), name.getLastName()));
     }
 
 }
